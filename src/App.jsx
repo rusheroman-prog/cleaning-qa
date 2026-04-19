@@ -181,7 +181,27 @@ const defaultChecklist = () => [
 // ROOT
 // ============================================================
 
-export default function App() {
+export default function App() {// ============================================================
+  // DEBUG BLOCK — удалить после диагностики
+  // ============================================================
+  const tgDebug = window.Telegram?.WebApp;
+  const debugData = {
+    hasTelegram: !!window.Telegram,
+    hasWebApp: !!tgDebug,
+    platform: tgDebug?.platform || 'NONE',
+    version: tgDebug?.version || 'NONE',
+    initDataLength: tgDebug?.initData?.length || 0,
+    initDataPreview: tgDebug?.initData ? tgDebug.initData.substring(0, 100) : 'EMPTY',
+    apiUrlSet: !!import.meta.env.VITE_API_URL,
+  };
+  
+  if (typeof window !== 'undefined' && !window._debugShown) {
+    window._debugShown = true;
+    setTimeout(() => {
+      alert('DEBUG:\n\n' + JSON.stringify(debugData, null, 2));
+    }, 500);
+  }
+  // ============================================================
   const [tab, setTab] = useState("dashboard");
   const [config, setConfig] = useState(null);
   const [checks, setChecks] = useState([]);
