@@ -190,27 +190,18 @@ export default function App() {
   if (typeof window !== 'undefined' && !window._debugShown) {
     window._debugShown = true;
     setTimeout(async () => {
-      const debugData = {
-        hasTelegram: !!window.Telegram,
-        hasWebApp: !!tgDebug,
-        platform: tgDebug?.platform || 'NONE',
-        initDataLength: tgDebug?.initData?.length || 0,
-      };
-      
-      // Пробуем обратиться к API с initData
       try {
         const url = new URL(import.meta.env.VITE_API_URL);
         url.searchParams.set('action', 'config');
         url.searchParams.set('initData', tgDebug?.initData || '');
         const r = await fetch(url.toString());
         const text = await r.text();
-        alert('API response (first 800 chars):\n\n' + text.substring(0, 800));
+        alert('API response (first 1000 chars):\n\n' + text.substring(0, 1000));
       } catch (err) {
         alert('FETCH ERROR:\n' + err.toString());
       }
     }, 500);
   }
-  // ============================================================
   // ============================================================
   const [tab, setTab] = useState("dashboard");
   const [config, setConfig] = useState(null);
