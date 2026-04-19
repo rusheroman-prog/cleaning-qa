@@ -181,26 +181,36 @@ const defaultChecklist = () => [
 // ROOT
 // ============================================================
 
-export default function App() {// ============================================================
+export default function App() {
+  // ============================================================
   // DEBUG BLOCK — удалить после диагностики
   // ============================================================
   const tgDebug = window.Telegram?.WebApp;
-  const debugData = {
-    hasTelegram: !!window.Telegram,
-    hasWebApp: !!tgDebug,
-    platform: tgDebug?.platform || 'NONE',
-    version: tgDebug?.version || 'NONE',
-    initDataLength: tgDebug?.initData?.length || 0,
-    initDataPreview: tgDebug?.initData ? tgDebug.initData.substring(0, 100) : 'EMPTY',
-    apiUrlSet: !!import.meta.env.VITE_API_URL,
-  };
   
   if (typeof window !== 'undefined' && !window._debugShown) {
     window._debugShown = true;
-    setTimeout(() => {
-      alert('DEBUG:\n\n' + JSON.stringify(debugData, null, 2));
+    setTimeout(async () => {
+      const debugData = {
+        hasTelegram: !!window.Telegram,
+        hasWebApp: !!tgDebug,
+        platform: tgDebug?.platform || 'NONE',
+        initDataLength: tgDebug?.initData?.length || 0,
+      };
+      
+      // Пробуем обратиться к API с initData
+      try {
+        const url = new URL(import.meta.env.VITE_API_URL);
+        url.searchParams.set('action', 'config');
+        url.searchParams.set('initData', tgDebug?.initData || '');
+        const r = await fetch(url.toString());
+        const text = await r.text();
+        alert('API response (first 800 chars):\n\n' + text.substring(0, 800));
+      } catch (err) {
+        alert('FETCH ERROR:\n' + err.toString());
+      }
     }, 500);
   }
+  // ============================================================
   // ============================================================
   const [tab, setTab] = useState("dashboard");
   const [config, setConfig] = useState(null);
