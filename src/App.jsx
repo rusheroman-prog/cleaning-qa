@@ -182,23 +182,30 @@ const defaultChecklist = () => [
 // ============================================================
 
 export default function App() {
-  
-  // ============================================================
   const [tab, setTab] = useState("dashboard");
   const [config, setConfig] = useState(null);
   const [checks, setChecks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState(null);
   const [detail, setDetail] = useState(null);
+  const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
     }
     (async () => {
       try {
         let cfg = await api.getConfig();
+
+        if (cfg && cfg.error === 'Unauthorized') {
+          setAuthError(cfg.debug || { reason: 'unknown' });
+          setLoading(false);
+          return;
+        }
+
         if (!cfg || !cfg.floors || cfg.floors.length === 0) {
           cfg = { floors: defaultFloors(), checklist: defaultChecklist() };
           await api.saveConfig(cfg);
@@ -238,6 +245,10 @@ export default function App() {
         <div className="text-slate-500 text-sm">Загрузка…</div>
       </div>
     );
+  }
+
+  if (authError) {
+    return <AccessDenied error={authError} />;
   }
 
   return (
@@ -289,6 +300,67 @@ export default function App() {
       </nav>
 
       {detail && <CheckDetail check={detail} config={config} onClose={()=>setDetail(null)} onDelete={deleteCheck} />}
+    </div>
+  );
+}
+
+// ============================================================
+// ACCESS DENIED
+// ============================================================
+
+function AccessDenied({ error }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyId = () => {
+    if (error.userId) {
+      try {
+        navigator.clipboard.writeText(String(error.userId));
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (e) {
+        alert('Ваш ID: ' + error.userId);
+      }
+    }
+  };
+
+  const isNotAllowed = error.reason === 'user_not_allowed';
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="bg-white rounded-lg border border-slate-200 p-6 max-w-md w-full">
+        <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+          <AlertTriangle className="w-6 h-6 text-amber-600" />
+        </div>
+        <h1 className="text-lg font-semibold text-center mb-2">Нет доступа</h1>
+
+        {isNotAllowed ? (
+          <>
+            <p className="text-sm text-slate-600 text-center mb-4">
+              Ваш Telegram ещё не добавлен в список проверяющих.
+              Отправьте администратору ваш ID:
+            </p>
+            <div className="bg-slate-50 border border-slate-200 rounded-md p-3 text-center mb-3">
+              <div className="text-xs text-slate-500 mb-1">Ваш Telegram ID</div>
+              <div className="text-xl font-mono font-semibold">{error.userId}</div>
+              {error.userName && (
+                <div className="text-xs text-slate-500 mt-1">{error.userName}</div>
+              )}
+            </div>
+            <button onClick={copyId}
+              className="w-full bg-slate-900 text-white rounded-md py-2.5 text-sm font-medium hover:bg-slate-800">
+              {copied ? '✓ Скопировано' : 'Скопировать ID'}
+            </button>
+          </>
+        ) : (
+          <p className="text-sm text-slate-600 text-center">
+            Не удалось войти. Попробуйте закрыть и снова открыть приложение.
+            <br />
+            <span className="text-xs text-slate-400 mt-2 block">
+              Код: {error.reason || 'unknown'}
+            </span>
+          </p>
+        )}
+      </div>
     </div>
   );
 }
