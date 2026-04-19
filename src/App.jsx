@@ -182,26 +182,7 @@ const defaultChecklist = () => [
 // ============================================================
 
 export default function App() {
-  // ============================================================
-  // DEBUG BLOCK — удалить после диагностики
-  // ============================================================
-  const tgDebug = window.Telegram?.WebApp;
   
-  if (typeof window !== 'undefined' && !window._debugShown) {
-    window._debugShown = true;
-    setTimeout(async () => {
-      try {
-        const url = new URL(import.meta.env.VITE_API_URL);
-        url.searchParams.set('action', 'config');
-        url.searchParams.set('initData', tgDebug?.initData || '');
-        const r = await fetch(url.toString());
-        const text = await r.text();
-        alert('API response (first 1000 chars):\n\n' + text.substring(0, 1000));
-      } catch (err) {
-        alert('FETCH ERROR:\n' + err.toString());
-      }
-    }, 500);
-  }
   // ============================================================
   const [tab, setTab] = useState("dashboard");
   const [config, setConfig] = useState(null);
